@@ -141,3 +141,23 @@ class RemoveEdge(object):
             del steps[-1].lE[(self.u, self.v)]
         except KeyError:
             pass
+
+class AddNodeProperty(object):
+    def __init__(self, v, name, value):
+        self.node = v
+        self.name = name
+        self.value = value
+    def __call__(self, steps):
+        lookup = steps[-1].node_properties
+
+        if not self.node in lookup:
+            lookup[self.node] = {}
+
+        lookup[self.node][self.name] = self.value
+
+class RemoveNodeProperty(object):
+    def __init__(self, v, name):
+        self.node = v
+        self.name = name
+    def __call__(self, steps):
+        del steps[-1].node_properties[self.node][self.name]

@@ -35,6 +35,10 @@ class Step(object):
             self.lE = step.lE.copy()
             self.hV = step.hV.copy()
             self.hE = step.hE.copy()
+            self.node_properties = {}
+            for node_name in step.node_properties:
+                self.node_properties[node_name] = step.node_properties[node_name].copy()
+
         # no previous step is given (NextStep() was called with "clean") to clear shit
         else:
             self.V = set()
@@ -43,6 +47,7 @@ class Step(object):
             self.lE = dict()
             self.hV = dict()
             self.hE = dict()
+            self.node_properties = dict()
 
     def node_format(self, v):
         fmt = []
@@ -50,6 +55,9 @@ class Step(object):
             fmt.append('label="{}"'.format(quote(str(self.lV[ v ]))))
         if v in self.hV:
             fmt.append('color={}'.format(self.hV[ v ]))
+        if v in self.node_properties:
+            for (name, value) in self.node_properties[v].items():
+                fmt.append(f'{name}={value}')
         elif v not in self.V:
             fmt.append('style=invis')
         if fmt:
@@ -72,7 +80,7 @@ class Step(object):
         # vertices, edges
         # highlighted vertices, highlighted edges
         #    labelled vertices,    labelled edges
-        return '{{ V={}, E={}, hV={}, hE={}, lV={}, lE={} }}'.format(self.V, self.E, self.hV, self.hE, self.lV, self.lE)
+        return '{{ V={}, E={}, hV={}, hE={}, lV={}, lE={} properties={}}}'.format(self.V, self.E, self.hV, self.hE, self.lV, self.lE, self.node_properties)
 
 class Animation(object):
     def __init__(self):
@@ -83,6 +91,12 @@ class Animation(object):
 
     def add_node(self, v):
         self._actions.append(action.AddNode(v))
+
+    def add_node_property(self, v, name, value):
+        self._actions.append(action.AddNodeProperty(v, name, value))
+
+    def remove_node_property(self, v, name):
+        self._actions.append(action.RemoveNodeProperty(v, name))
 
     def highlight_node(self, v, color='red'):
         self._actions.append(action.HighlightNode(v, color=color))

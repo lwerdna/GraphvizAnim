@@ -11,6 +11,30 @@ ga = Animation()
 ga.add_node('a')
 ga.next_step()
 
+#
+ga.add_node_property('a', 'shape', 'triangle')
+ga.next_step()
+
+ga.add_node_property('a', 'shape', 'box')
+ga.next_step()
+
+ga.add_node_property('a', 'shape', 'egg')
+ga.next_step()
+
+ga.label_node('a', '')
+ga.add_node_property('a', 'shape', '"none"')
+ga.add_node_property('a', 'image', '"node_image0.png"')
+ga.next_step()
+
+ga.add_node_property('a', 'image', '"node_image1.png"')
+ga.next_step()
+
+ga.add_node_property('a', 'image', '"node_image2.png"')
+ga.next_step()
+
+ga.add_node_property('a', 'image', '"node_image3.png"')
+ga.next_step()
+
 # [A]
 ga.highlight_node('a')
 ga.next_step()
@@ -49,7 +73,6 @@ ga.next_step()
 ga.unhighlight_edge('b', 'c')
 ga.highlight_edge('b', 'd')
 ga.next_step()
-
 
 graphs = ga.graphs()
 files = render(graphs, 'simple', 'png')

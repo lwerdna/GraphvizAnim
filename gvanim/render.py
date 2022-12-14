@@ -21,13 +21,17 @@ from subprocess import Popen, PIPE, STDOUT, call
 from multiprocessing import Pool, cpu_count
 
 def render_single(params):
-    path, fmt, size, graph = params
+    path, ext, size, graph = params
     with open(path , 'w') as out:
-        pipe = Popen([ 'dot',  '-Gsize=1,1!', '-Gdpi={}'.format(size), '-T', fmt ], stdout = out, stdin = PIPE, stderr = None)
+        cmds = ['dot',  '-Gsize=1,1!', '-Gdpi={}'.format(size), '-T', ext]
+        print(' '.join(cmds))
+        pipe = Popen(cmds, stdout=out, stdin=PIPE, stderr=None)
+        print(graph.encode())
         pipe.communicate(input = graph.encode())
+        pipe.wait()
     return path
 
-def render(graphs, basename, ext = 'png', size = 320):
+def render(graphs, basename, ext='png', size=320):
     paths = []
 
     # single core
