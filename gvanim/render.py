@@ -21,24 +21,35 @@ from subprocess import Popen, PIPE, STDOUT, call
 from multiprocessing import Pool, cpu_count
 
 def _render( params ):
-	path, fmt, size, graph = params
-	with open( path , 'w' ) as out:
-		pipe = Popen( [ 'dot',  '-Gsize=1,1!', '-Gdpi={}'.format( size ), '-T', fmt ], stdout = out, stdin = PIPE, stderr = None )
-		pipe.communicate( input = graph.encode() )
-	return path
+    path, fmt, size, graph = params
+    with open( path , 'w' ) as out:
+        pipe = Popen( [ 'dot',  '-Gsize=1,1!', '-Gdpi={}'.format( size ), '-T', fmt ], stdout = out, stdin = PIPE, stderr = None )
+        pipe.communicate( input = graph.encode() )
+    return path
 
 def render( graphs, basename, fmt = 'png', size = 320 ):
-	try:
-		_map = Pool( processes = cpu_count() ).map
-	except NotImplementedError:
-		_map = map
-	return _map( _render, [ ( '{}_{:03}.{}'.format( basename, n, fmt ), fmt, size, graph ) for n, graph in enumerate( graphs ) ] )
+    paths = []
+
+    # single core
+    for (n,graph) in enumerate(graphs):
+        print(f'rendering frame {n+1}/{len(graphs)}')
+        path = '{}_{:03}.{}'.format(basename, n, fmt)
+        _render((path, fmt, size, graph))
+        paths.append(path)
+
+    return paths
+
+    try:
+        _map = Pool( processes = cpu_count() ).map
+    except NotImplementedError:
+        _map = map
+    return _map( _render, [ ( '{}_{:03}.{}'.format( basename, n, fmt ), fmt, size, graph ) for n, graph in enumerate( graphs ) ] )
 
 def gif( files, basename, delay = 100, size = 320 ):
-	for file in files:
-		call([ 'mogrify', '-gravity', 'center', '-background', 'white', '-extent', str(size), file ])
-	cmd = [ 'convert' ]
-	for file in files:
-		cmd.extend( ( '-delay', str( delay ), file ) )
-	cmd.append( basename + '.gif' )
-	call( cmd )
+    for file in files:
+        call([ 'mogrify', '-gravity', 'center', '-background', 'white', '-extent', str(size), file ])
+    cmd = [ 'convert' ]
+    for file in files:
+        cmd.extend( ( '-delay', str( delay ), file ) )
+    cmd.append( basename + '.gif' )
+    call( cmd )
