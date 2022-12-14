@@ -66,7 +66,10 @@ class Step( object ):
 		return ''
 
 	def __repr__( self ):
-		return '{{ V = {}, E = {}, hV = {}, hE = {}, L = {}, lE = {} }}'.format( self.V, self.E, self.hV, self.hE, self.lV, self.lE )
+		# vertices, edges
+		# highlighted vertices, highlighted edges
+		#    labelled vertices,    labelled edges
+		return '{{ V = {}, E = {}, hV = {}, hE = {}, lV = {}, lE = {} }}'.format( self.V, self.E, self.hV, self.hE, self.lV, self.lE )
 
 class Animation( object ):
 

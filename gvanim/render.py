@@ -20,36 +20,37 @@ from __future__ import absolute_import
 from subprocess import Popen, PIPE, STDOUT, call
 from multiprocessing import Pool, cpu_count
 
-def _render( params ):
+def render_single(params):
     path, fmt, size, graph = params
-    with open( path , 'w' ) as out:
-        pipe = Popen( [ 'dot',  '-Gsize=1,1!', '-Gdpi={}'.format( size ), '-T', fmt ], stdout = out, stdin = PIPE, stderr = None )
-        pipe.communicate( input = graph.encode() )
+    with open(path , 'w') as out:
+        pipe = Popen([ 'dot',  '-Gsize=1,1!', '-Gdpi={}'.format(size), '-T', fmt ], stdout = out, stdin = PIPE, stderr = None)
+        pipe.communicate(input = graph.encode())
     return path
 
-def render( graphs, basename, fmt = 'png', size = 320 ):
+def render(graphs, basename, ext = 'png', size = 320):
     paths = []
 
     # single core
     for (n,graph) in enumerate(graphs):
-        print(f'rendering frame {n+1}/{len(graphs)}')
-        path = '{}_{:03}.{}'.format(basename, n, fmt)
-        _render((path, fmt, size, graph))
+        path = f'/tmp/{basename}_{n:03}.{ext}'
+        print(f'rendering frame {n+1}/{len(graphs)} to {path}')
+        render_single((path, ext, size, graph))
         paths.append(path)
 
     return paths
 
     try:
-        _map = Pool( processes = cpu_count() ).map
+        _map = Pool(processes = cpu_count()).map
     except NotImplementedError:
         _map = map
-    return _map( _render, [ ( '{}_{:03}.{}'.format( basename, n, fmt ), fmt, size, graph ) for n, graph in enumerate( graphs ) ] )
+    return _map(render_single, [ ('{}_{:03}.{}'.format(basename, n, fmt), fmt, size, graph) for n, graph in enumerate(graphs) ])
 
-def gif( files, basename, delay = 100, size = 320 ):
+def gif(files, basename, delay = 100, size = 320):
     for file in files:
         call([ 'mogrify', '-gravity', 'center', '-background', 'white', '-extent', str(size), file ])
     cmd = [ 'convert' ]
     for file in files:
-        cmd.extend( ( '-delay', str( delay ), file ) )
-    cmd.append( basename + '.gif' )
-    call( cmd )
+        cmd.extend(('-delay', str(delay), file))
+    cmd.append(basename + '.gif')
+    print(' '.join(cmd))
+    call(cmd)
