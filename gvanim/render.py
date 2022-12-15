@@ -20,25 +20,36 @@ from __future__ import absolute_import
 from subprocess import Popen, PIPE, STDOUT, call
 from multiprocessing import Pool, cpu_count
 
-def render_single(params):
-    path, ext, size, graph = params
-    with open(path , 'w') as out:
-        cmds = ['dot',  '-Gsize=1,1!', '-Gdpi={}'.format(size), '-T', ext]
-        print(' '.join(cmds))
-        pipe = Popen(cmds, stdout=out, stdin=PIPE, stderr=None)
-        print(graph.encode())
-        pipe.communicate(input = graph.encode())
-        pipe.wait()
-    return path
+def shellout(cmd, input_text=None):
+    process = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+    if input_text == None:
+        (stdout, stderr) = process.communicate()
+    else:
+        if type(input_text) == str:
+            input_text = input_text.encode('utf-8')
+        (stdout, stderr) = process.communicate(input=input_text)
+    stdout = stdout.decode("utf-8")
+    stderr = stderr.decode("utf-8")
+    process.wait()
+    return (stdout, stderr)
+
+def render_to_svg(dot):
+    cmd = ['dot', '-T', 'svg']
+    stdout, stderr = shellout(cmd, dot)
+    return stdout
+
+def render_single(path, ext, size, dot):
+    cmd = ['dot',  '-Gsize=1,1!', f'-Gdpi={size}', '-T', ext, '-o', path]
+    shellout(cmd, dot)
 
 def render(graphs, basename, ext='png', size=320):
     paths = []
 
     # single core
-    for (n,graph) in enumerate(graphs):
-        path = f'/tmp/{basename}_{n:03}.{ext}'
-        print(f'rendering frame {n+1}/{len(graphs)} to {path}')
-        render_single((path, ext, size, graph))
+    for (i, dot) in enumerate(graphs):
+        path = f'/tmp/{basename}_{i:04}.{ext}'
+        print(f'rendering frame {i+1}/{len(graphs)} to {path}')
+        render_single(path, ext, size, dot)
         paths.append(path)
 
     return paths
@@ -47,7 +58,7 @@ def render(graphs, basename, ext='png', size=320):
         _map = Pool(processes = cpu_count()).map
     except NotImplementedError:
         _map = map
-    return _map(render_single, [ ('{}_{:03}.{}'.format(basename, n, fmt), fmt, size, graph) for n, graph in enumerate(graphs) ])
+    return _map(render_single, [ ('{}_{:04}.{}'.format(basename, n, fmt), fmt, size, graph) for n, graph in enumerate(graphs) ])
 
 def gif(files, basename, delay = 100, size = 320):
     for file in files:

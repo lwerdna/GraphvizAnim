@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
-# produce an animation of a build of the simple graph from:
-# https://en.wikipedia.org/wiki/DOT_(graph_description_language)
+# exercise many gvanim options
 
 from gvanim import Animation, render, gif
 
@@ -75,5 +74,5 @@ ga.highlight_edge('b', 'd')
 ga.next_step()
 
 graphs = ga.graphs()
-files = render(graphs, 'simple', 'png')
-gif(files, 'simple', 50)
+files = render(graphs, 'exercise', 'png')
+gif(files, 'exercise', 50)
