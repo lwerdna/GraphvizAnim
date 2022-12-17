@@ -36,11 +36,18 @@ def shellout(cmd, input_text=None):
 def render_to_svg(dot):
     cmd = ['dot', '-T', 'svg']
     stdout, stderr = shellout(cmd, dot)
+    assert not stderr
     return stdout
 
 def render_single(path, ext, size, dot):
-    cmd = ['dot',  '-Gsize=1,1!', f'-Gdpi={size}', '-T', ext, '-o', path]
-    shellout(cmd, dot)
+    cmd = ['dot']
+    if size != None:
+        cmd.extend(['-Gsize=1,1!', f'-Gdpi={size}'])
+    cmd.extend(['-T', ext, '-o', path])
+    print(' '.join(cmd))
+    stdout, stderr = shellout(cmd, dot)
+    assert not stderr
+    return stdout
 
 def render(graphs, basename, ext='png', size=320):
     paths = []
@@ -48,6 +55,7 @@ def render(graphs, basename, ext='png', size=320):
     # single core
     for (i, dot) in enumerate(graphs):
         path = f'/tmp/{basename}_{i:04}.{ext}'
+        #breakpoint()
         print(f'rendering frame {i+1}/{len(graphs)} to {path}')
         render_single(path, ext, size, dot)
         paths.append(path)
@@ -60,9 +68,10 @@ def render(graphs, basename, ext='png', size=320):
         _map = map
     return _map(render_single, [ ('{}_{:04}.{}'.format(basename, n, fmt), fmt, size, graph) for n, graph in enumerate(graphs) ])
 
-def gif(files, basename, delay = 100, size = 320):
-    for file in files:
-        call([ 'mogrify', '-gravity', 'center', '-background', 'white', '-extent', str(size), file ])
+def gif(files, basename, delay=100, size=320):
+    if size != None:
+        for file in files:
+            call(['mogrify', '-gravity', 'center', '-background', 'white', '-extent', str(size), file])
     cmd = [ 'convert' ]
     for file in files:
         cmd.extend(('-delay', str(delay), file))
